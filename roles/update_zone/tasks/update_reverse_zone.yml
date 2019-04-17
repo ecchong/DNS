@@ -33,7 +33,7 @@
   when: backup_files.stdout_lines | length > 0
     
 - name: Check if hostname already exists
-  command: "grep -i '^{{ hostname }}[[:space:]]' {{ ptr_zone_file }}"
+  command: "grep -i '{{ hostname }}\\.{{ zone }}\\.$' {{ ptr_zone_file }}"
   register: host_exist
   ignore_errors: true
 

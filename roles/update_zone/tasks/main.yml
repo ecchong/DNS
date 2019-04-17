@@ -6,6 +6,8 @@
   when:
   - zone_file is defined
   - zone is defined
+  - hostname is defined
+  - ipaddress is defined
 
 - name: Update reverse zone file
   include_tasks:
@@ -14,3 +16,5 @@
   - zone is defined
   - ptr_zone_file is defined
   - ptr_zone is defined
+  - hostname is defined
+  - ipaddress is defined
