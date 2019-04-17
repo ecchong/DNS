@@ -12,5 +12,6 @@
     ptr_zone: 10.18.172.in-addr.arpa
     ptr_zone_file: db.10.18.172.in-addr.arpa
 
+
   roles:
   - update_zone
