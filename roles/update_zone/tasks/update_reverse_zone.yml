@@ -1,0 +1,118 @@
+- name: Get serial number from zone file
+  command: "awk '/[0-9]+\\s+;\\s*serial$/ { print $1 }' {{ ptr_zone_file }}"
+  register: zone_serial_number
+
+- name: Set zone_serial_number
+  set_fact:
+    current_serial_number: "{{ zone_serial_number.stdout | int }}"
+
+- name: Get list of existing backup files with today's date and end with lower case letter
+  shell: "ls -1r {{ ptr_zone_file }}.{{ date_string }}[a-z]"
+  register: backup_files
+  ignore_errors: true
+
+- name: Debug - List of backup files
+  debug:
+    msg: "{{ backup_files.stdout_lines }}"
+    verbosity: "1"
+
+- name: Store next backup letter if other backup files already exist.  Increment the last char of the last file
+  set_fact:
+    backup_letter: "{{ next_letter[backup_files.stdout_lines[0][-1:]] }}"
+  when: backup_files.stdout_lines | length > 0
+
+- name: No previous back file exists.  Use 'a' as backup letter.
+  set_fact:
+    backup_letter: "a"
+  when: backup_files.stdout_lines | length == 0
+
+- name: Debug - next letter for backup file
+  debug:
+    msg: "{{ next_letter[backup_files.stdout_lines[0][-1:]] }}"
+    verbosity: "1"
+  when: backup_files.stdout_lines | length > 0
+    
+- name: Check if hostname already exists
+  command: "grep -i '^{{ hostname }}[[:space:]]' {{ ptr_zone_file }}"
+  register: host_exist
+  ignore_errors: true
+
+- name: Verify hostname does not already exists
+  assert:
+    that:
+    - host_exist.stdout_lines | length == 0
+    fail_msg: "{{ hostname }} already exists in {{ ptr_zone_file }} : {{ host_exist.stdout }}"
+    success_msg: "Could not find {{ hostname }} in {{ ptr_zone_file }}"
+
+- name:  Verify serial number is an integer
+  assert:
+    that:
+    - current_serial_number > 0
+    success_msg: "The current serial number is {{ current_serial_number }}"
+
+- name: Verify ipaddress is valid format
+  assert:
+    that:
+    - ipaddress | ipaddr
+    fail_msg: "{{ ipaddress }} does not seems to be in valid format"
+
+- name: Make backup of zone file
+  copy:
+    remote_src: yes
+    src: "{{ ptr_zone_file }}"
+    dest: "{{ ptr_zone_file }}.{{ date_string }}.temp"
+  register: temp_file
+    
+- name: Set ipaddress in reverse format
+  set_fact:
+    rev_ipaddress: "{{ ipaddress | ipaddr('revdns') }}"
+
+- name: Remove the network address from the ipaddress
+  set_fact:
+    ptr_addr: "{{ item }}.{{ ptr_addr | default('') }}"
+  with_items: "{{ rev_ipaddress.split('.') | difference( ptr_zone.split('.') ) | difference(['']) }}"
+
+- name: Remove the '.' from the end of the ipaddress
+  set_fact:
+    ptr_addr: "{{ ptr_addr[:-1] }}"
+
+- name: Debug - ptr_addr
+  debug: 
+    msg: "{{ ptr_addr }}"
+    verbosity: "1"
+  
+- name: Insert record
+  lineinfile:
+    backup: no
+    path: "{{ ptr_zone_file }}"
+    regex: "^{{ ptr_addr }}"
+    line: "{{ ptr_addr }}\t\tPTR\t{{ hostname }}.{{ zone }}."
+#      validate: "/usr/sbin/named-checkzone {{ zone }} %s"
+  register: dns_update
+  notify:
+  - Restart named
+
+- name: Update serial if changed
+  lineinfile:
+    backup: no
+    path: "{{ ptr_zone_file }}"
+    regex: "\\s*[0-9]+\\s+;\\s*serial$"
+    line: "\t\t\t\t{{ current_serial_number | int + 1 }}\t;\tserial"
+#      validate: "/usr/sbin/named-checkzone {{ zone }} %s"
+  when: dns_update.changed
+  notify:
+  - Restart named
+
+- name: Move temp file to backup
+  command: "mv {{ temp_file.dest }} {{ ptr_zone_file }}.{{ date_string }}{{ backup_letter }}"
+  when:
+  - dns_update.changed
+  - temp_file.changed
+
+- name: Remove temp if no change
+  file:
+    path: "{{ temp_file.dest }}"
+    state: absent
+  when: dns_update.changed != true
+  
+# TODO - Might have to remove the journal files before we can restart with the new serial number

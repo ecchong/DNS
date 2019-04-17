@@ -1,0 +1,16 @@
+---
+# tasks file for update_zone
+- name: Update forward zone file
+  include_tasks:
+      file: update_forward_zone.yml
+  when:
+  - zone_file is defined
+  - zone is defined
+
+- name: Update reverse zone file
+  include_tasks:
+      file: update_reverse_zone.yml
+  when:
+  - zone is defined
+  - ptr_zone_file is defined
+  - ptr_zone is defined

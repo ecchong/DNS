@@ -1,0 +1,66 @@
+---
+- hosts: localhost
+  connection: local
+  gather_facts: no
+
+  vars:
+    zone: dev.iisl.com
+#    zone_file: "/var/named/dynamic/db.dev.iisl.com"
+    zone_file: db.dev.iisl.com
+    ipaddress: 172.18.10.232
+    hostname: dummy2
+
+  tasks:
+  - name: Get serial number from zone file
+    command: "awk '/[0-9]+\\s+;\\s*serial$/ { print $1 }' {{ zone_file }}"
+    register: zone_serial_number
+  
+  - name: Set zone_serial_number
+    set_fact:
+      current_serial_number: "{{ zone_serial_number.stdout | int }}"
+
+  - name: Check if hostname already exists
+    command: "grep -i '^{{ hostname }}[[:space:]]' {{ zone_file }}"
+    register: host_exist
+    ignore_errors: true
+
+  - name: Verify hostname does not already exists
+    assert:
+      that:
+      - host_exist.stdout_lines | length == 0
+      fail_msg: "{{ hostname }} already exists in {{ zone_file }} : {{ host_exist.stdout }}"
+
+  - name:  Verify serial number is an integer
+    assert:
+      that:
+      - current_serial_number > 0
+      success_msg: "The current serial number is {{ current_serial_number }}"
+
+  - name: Insert record
+    lineinfile:
+      backup: yes
+      path: "{{ zone_file }}"
+      regex: "^{{ hostname }}"
+      line: "{{ hostname }}\t\tA\t{{ ipaddress }}"
+      validate: "/usr/sbin/named-checkzone {{ zone }} %s"
+    register: dns_update
+    notify:
+    - Restart named
+
+  - name: Update serial if changed
+    lineinfile:
+      backup: no
+      path: "{{ zone_file }}"
+      regex: "\\s*[0-9]+\\s+;\\s*serial$"
+      line: "\t\t\t\t{{ current_serial_number | int + 1 }}\t;\tserial"
+      validate: "/usr/sbin/named-checkzone {{ zone }} %s"
+    when: dns_update.changed
+    notify:
+    - Restart named
+    
+  # TODO - Might have to remove the journal files before we can restart with the new serial number
+  handlers:
+  - name: Restart named
+    service:
+      name: named
+      state: restarted

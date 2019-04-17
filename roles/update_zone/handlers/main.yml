@@ -1,0 +1,8 @@
+---
+# handlers file for update_zone
+- name: Restart named
+  debug:
+    msg: "no restart here"
+#    service:
+#      name: named
+#      state: reloaded
