@@ -87,7 +87,6 @@
   command: "mv {{ temp_file.dest }} {{ zone_file }}.{{ date_string }}{{ backup_letter }}"
   when:
   - dns_update.changed
-  - temp_file.changed
 
 - name: Remove temp if no change
   file:
