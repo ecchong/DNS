@@ -67,14 +67,19 @@
   set_fact:
     rev_ipaddress: "{{ ipaddress | ipaddr('revdns') }}"
 
+- name: Clear ptr_addr
+  set_fact:
+    ptr_addr: ""
+
 - name: Remove the network address from the ipaddress
   set_fact:
-    ptr_addr: "{{ item }}.{{ ptr_addr | default('') }}"
+#    ptr_addr: "{{ item }}.{{ ptr_addr | default('') }}"
+    ptr_addr: "{{ ptr_addr | default('') }}.{{ item }}"
   with_items: "{{ rev_ipaddress.split('.') | difference( ptr_zone.split('.') ) | difference(['']) }}"
 
-- name: Remove the '.' from the end of the ipaddress
+- name: Remove the '.' from the front of the ipaddress
   set_fact:
-    ptr_addr: "{{ ptr_addr[:-1] }}"
+    ptr_addr: "{{ ptr_addr[1:] }}"
 
 - name: Debug - ptr_addr
   debug: 

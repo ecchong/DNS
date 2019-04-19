@@ -10,13 +10,13 @@
       zone_file: db.dev.iisl.com
       ipaddress: 172.18.10.212
       hostname: dummy1
-      ptr_zone: 10.18.172.in-addr.arpa
+      ptr_zone: 18.172.in-addr.arpa
       ptr_zone_file: db.10.18.172.in-addr.arpa
     - zone: dev.iisl.com
       zone_file: db.dev.iisl.com
       ipaddress: 172.18.10.213
       hostname: dummy2
-      ptr_zone: 10.18.172.in-addr.arpa
+      ptr_zone: 18.172.in-addr.arpa
       ptr_zone_file: db.10.18.172.in-addr.arpa
 
   tasks:
