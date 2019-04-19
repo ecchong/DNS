@@ -1,0 +1,36 @@
+---
+- name: Update forward and reverse zone files
+  hosts: localhost
+  connection: smart
+  gather_facts: no
+
+  vars:
+    servers:
+    - zone: dev.iisl.com
+      zone_file: db.dev.iisl.com
+      ipaddress: 172.18.10.212
+      hostname: dummy1
+      ptr_zone: 10.18.172.in-addr.arpa
+      ptr_zone_file: db.10.18.172.in-addr.arpa
+    - zone: dev.iisl.com
+      zone_file: db.dev.iisl.com
+      ipaddress: 172.18.10.213
+      hostname: dummy2
+      ptr_zone: 10.18.172.in-addr.arpa
+      ptr_zone_file: db.10.18.172.in-addr.arpa
+
+  tasks:
+  - name: Call update_zone
+    include_role:
+      name: update_zone
+    vars:
+      zone: "{{ server.zone }}"
+      zone_file: "{{ server.zone_file }}"
+      ipaddress: "{{ server.ipaddress }}"
+      hostname: "{{ server.hostname }}"
+      ptr_zone: "{{ server.ptr_zone }}"
+      ptr_zone_file: "{{ server.ptr_zone_file }}"
+    loop: "{{ servers }}"
+    loop_control:
+      loop_var: server
+      label: "{{ server.hostname }}"
