@@ -1,5 +1,8 @@
 ### This is an exmaple of configuring zone files with Ansible
 
+Example 02-add_record_by_nsupdate.yml uses nsupdate to update dynamic DNS
+Example 04-add_record_by_role.yml uses the attached role to update the zone files.
+
 Example
 -------
 
