@@ -86,11 +86,16 @@
     msg: "{{ ptr_addr }}"
     verbosity: "1"
   
+- name: Debug - ptr_addr search string
+  debug: 
+    msg: '^{{ ptr_addr | regex_replace("\.","\\\.") }}\s'
+    verbosity: "1"
+ 
 - name: Insert record
   lineinfile:
     backup: no
     path: "{{ ptr_zone_file }}"
-    regex: "^{{ ptr_addr }}"
+    regex: '^{{ ptr_addr | regex_replace("\.","\\\.") }}\s'
     line: "{{ ptr_addr }}\t\tPTR\t{{ hostname }}.{{ zone }}."
 #      validate: "/usr/sbin/named-checkzone {{ zone }} %s"
   register: dns_update
