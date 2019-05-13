@@ -65,7 +65,7 @@
   lineinfile:
     backup: no
     path: "{{ zone_file }}"
-    regex: "^{{ hostname }}"
+    regex: '^{{ hostname }}\s'
     line: "{{ hostname }}\t\tA\t{{ ipaddress }}"
 #      validate: "/usr/sbin/named-checkzone {{ zone }} %s"
   register: dns_update
