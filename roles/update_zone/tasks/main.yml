@@ -1,5 +1,16 @@
 ---
-# tasks file for update_zone
+- name: Confirm ipaddress is valid
+  assert:
+    that:
+    - ipaddress | ipv4
+    - ipaddress | regex_replace('[0-9]','') == "..."
+    fail_msg: " IP address {{ ipaddress }} is invalid."
+
+#- name: Confirm revers network address is valid
+#  assert:
+#    that:
+#    - 
+  
 - name: Update forward zone file
   include_tasks:
       file: update_forward_zone.yml

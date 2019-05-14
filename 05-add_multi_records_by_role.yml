@@ -8,7 +8,8 @@
     servers:
     - zone: dev.iisl.com
       zone_file: db.dev.iisl.com
-      ipaddress: 172.18.10.212
+      ipaddress: 172.18.10.123
+      cidr: 172.18.10.0/24
       hostname: dummy1
       ptr_zone: 18.172.in-addr.arpa
       ptr_zone_file: db.10.18.172.in-addr.arpa
