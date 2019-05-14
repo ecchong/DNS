@@ -89,7 +89,6 @@
 
 - name: Remove the network address from the ipaddress
   set_fact:
-#    ptr_addr: "{{ item }}.{{ ptr_addr | default('') }}"
     ptr_addr: "{{ ptr_addr | default('') }}.{{ item }}"
   with_items: "{{ rev_ipaddress.split('.') | difference( ptr_zone.split('.') ) | difference(['']) }}"
 
