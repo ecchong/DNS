@@ -1,5 +1,5 @@
 - name: Get serial number from zone file
-  command: "awk '/[0-9]+\\s+;\\s*serial$/ { print $1 }' {{ zone_file }}"
+  command: "awk '/[0-9]+\\s+;\\s*[s|S][e|E][r|R][i|I][a|A][l|L]/ { print $1 }' {{ zone_file }}"
   register: zone_serial_number
 
 - name: Set zone_serial_number
@@ -76,7 +76,7 @@
   lineinfile:
     backup: no
     path: "{{ zone_file }}"
-    regex: "\\s*[0-9]+\\s+;\\s*serial$"
+    regex: "\\s*[0-9]+\\s+;\\s*[s|S][e|E][r|R][i|I][a|A][l|L]"
     line: "\t\t\t\t{{ current_serial_number | int + 1 }}\t;\tserial"
 #      validate: "/usr/sbin/named-checkzone {{ zone }} %s"
   when: dns_update.changed
