@@ -9,9 +9,8 @@
     - zone: dev.iisl.com
       zone_file: db.dev.iisl.com
       ipaddress: 172.18.10.123
-      cidr: 172.18.10.0/24
+      cidr: 172.18.0.0/16
       hostname: dummy1
-      ptr_zone: 18.172.in-addr.arpa
       ptr_zone_file: db.10.18.172.in-addr.arpa
     - zone: dev.iisl.com
       zone_file: db.dev.iisl.com
@@ -25,12 +24,13 @@
     include_role:
       name: update_zone
     vars:
-      zone: "{{ server.zone }}"
-      zone_file: "{{ server.zone_file }}"
-      ipaddress: "{{ server.ipaddress }}"
-      hostname: "{{ server.hostname }}"
-      ptr_zone: "{{ server.ptr_zone }}"
-      ptr_zone_file: "{{ server.ptr_zone_file }}"
+      r_zone: "{{ server.zone }}"
+      r_zone_file: "{{ server.zone_file }}"
+      r_ipaddress: "{{ server.ipaddress }}"
+      r_hostname: "{{ server.hostname }}"
+      r_ptr_zone: "{{ server.ptr_zone | default(none) }}"
+      r_ptr_zone_file: "{{ server.ptr_zone_file }}"
+      r_cidr: "{{ server.cidr | default(none) }}"
     loop: "{{ servers }}"
     loop_control:
       loop_var: server

@@ -1,4 +1,14 @@
 ---
+- name: Move fixed variables to facts
+  set_fact:
+    zone: "{{ r_zone }}"
+    zone_file: "{{ r_zone_file }}"
+    ipaddress: "{{ r_ipaddress }}"
+    hostname: "{{ r_hostname }}"
+    ptr_zone: "{{ r_ptr_zone }}"
+    ptr_zone_file: "{{ r_ptr_zone_file }}"
+    cidr: "{{ r_cidr }}"
+
 - name: Confirm ipaddress is valid
   assert:
     that:
@@ -6,12 +16,28 @@
     - ipaddress | regex_replace('[0-9]','') == "..."
     fail_msg: " IP address {{ ipaddress }} is invalid."
 
-#- name: Confirm revers network address is valid
-#  assert:
-#    that:
-#    - 
+- name: If CIDR is specified
+  block:
+  - name: Confirm CIDR network address is valid
+    assert:
+      that:
+      - cidr | ipsubnet
+      fail_msg: " CIDR {{ cidr }} is invalid."
   
-- name: Update forward zone file
+  - name: Confirm IP address is within the CIRD range
+    assert:
+      that:
+      - ipaddress | ipaddr(cidr) == ipaddress
+      fail_msg: " IP address {{ ipaddress }} is not in CIDR range {{ cidr }}"
+
+  - name: Convert CIDR to reverse address if specified
+    set_fact:
+      ptr_zone: "{{ cidr |ipaddr('revdns')|regex_replace('^[0|\\.]+','') }}"
+  when:
+  - cidr is defined
+  - cidr != ""
+  
+- name: Update forward zone file for "{{ hostname }} - {{ ipaddress }}"
   include_tasks:
       file: update_forward_zone.yml
   when:
@@ -20,12 +46,12 @@
   - hostname is defined
   - ipaddress is defined
 
-- name: Update reverse zone file
+- name: Update reverse zone file for "{{ hostname }} - {{ ipaddress }}"
   include_tasks:
       file: update_reverse_zone.yml
   when:
   - zone is defined
   - ptr_zone_file is defined
-  - ptr_zone is defined
+  - ptr_zone != ""
   - hostname is defined
   - ipaddress is defined

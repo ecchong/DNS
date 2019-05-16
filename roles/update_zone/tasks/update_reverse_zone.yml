@@ -1,9 +1,9 @@
 - name: Get serial number from zone file
-  command: "awk '/[0-9]+\\s+;\\s*[s|S][e|E][r|R][i|I][a|A][l|L]/ { print $1 }' {{ ptr_zone_file }}"
+  command: "gawk -F ';' '/[0-9]+\\s+;\\s*[s|S][e|E][r|R][i|I][a|A][l|L]/ { print $1 }' {{ ptr_zone_file }}"
   register: zone_serial_number
 
 - name: Get serial number line from zone file
-  command: "awk '/[0-9]+\\s+;\\s*[s|S][e|E][r|R][i|I][a|A][l|L]/ { print $0 }' {{ ptr_zone_file }}"
+  command: "gawk '/[0-9]+\\s+;\\s*[s|S][e|E][r|R][i|I][a|A][l|L]/ { print $0 }' {{ ptr_zone_file }}"
   register: zone_serial_number_line
 
 - name: Set zone_serial_number
